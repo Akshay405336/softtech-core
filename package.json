@@ -1,4 +1,3 @@
-
 {
   "name": "softtech-core",
   "version": "1.0.0",
@@ -6,6 +5,11 @@
   "description": "Reusable foundation for Softtech projects",
   "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "check:environment": "node --version && pnpm --version"
+    "check:environment": "node --version && pnpm --version",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
   }
 }
