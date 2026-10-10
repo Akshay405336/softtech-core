@@ -1,0 +1,12 @@
+{
+  "name": "@softtech/typescript-config",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared TypeScript configurations for Softtech projects",
+  "files": [
+    "*.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json"
+  }
+}
