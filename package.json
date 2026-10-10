@@ -1,0 +1,8 @@
+
+{
+  "name": "softtech-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reusable foundation for Softtech projects",
+  "packageManager": "pnpm@10.28.2"
+}

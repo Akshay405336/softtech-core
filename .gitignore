@@ -1,0 +1,39 @@
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Test and coverage outputs
+coverage/
+playwright-report/
+test-results/
+
+# Local tooling
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+
+# Local editor settings
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Local operating system files
+Desktop.ini
