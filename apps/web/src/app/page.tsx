@@ -57,7 +57,23 @@ import {
   DataTableColumnHeader,
   type ColumnDef,
   type DataTableFilterableColumn,
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormSection,
+  FormActions,
+  FormErrorSummary,
+  RadioGroup,
+  RadioGroupItem,
+  PasswordInput,
+  useForm,
+  zodResolver,
 } from "@softtech/ui";
+import { z } from "zod";
 import {
   AlertCircle,
   Bell,
@@ -72,6 +88,7 @@ import {
   MoreHorizontal,
   Plus,
   RefreshCw,
+  Send,
   Trash2,
 } from "lucide-react";
 
@@ -196,6 +213,28 @@ const mockStudents: StudentRecord[] = [
   },
 ];
 
+const showcaseFormSchema = z.object({
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid business email address"),
+  phone: z.string().optional(),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  role: z.string().min(1, "Please select an account role"),
+  notificationChannel: z.enum(["email", "slack", "sms"], {
+    message: "Please select a notification channel",
+  }),
+  bio: z.string().max(200, "Bio cannot exceed 200 characters").optional(),
+  enable2FA: z.boolean(),
+  acceptTerms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions to proceed",
+  }),
+});
+
+type ShowcaseFormValues = z.infer<typeof showcaseFormSchema>;
+
 export default function DesignSystemShowcase(): React.JSX.Element {
   const [checked, setChecked] = React.useState<boolean>(false);
   const [switched, setSwitched] = React.useState<boolean>(true);
@@ -203,6 +242,42 @@ export default function DesignSystemShowcase(): React.JSX.Element {
   const [isTableLoading, setIsTableLoading] = React.useState<boolean>(false);
   const [isEmptyData, setIsEmptyData] = React.useState<boolean>(false);
   const [selectedStudents, setSelectedStudents] = React.useState<StudentRecord[]>([]);
+
+  // Form showcase state
+  const [formSubmittedData, setFormSubmittedData] = React.useState<ShowcaseFormValues | null>(null);
+  const [formServerError, setFormServerError] = React.useState<string | null>(null);
+  const [simulateServerError, setSimulateServerError] = React.useState<boolean>(false);
+
+  const form = useForm<ShowcaseFormValues>({
+    resolver: zodResolver(showcaseFormSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "developer",
+      notificationChannel: "email",
+      bio: "",
+      enable2FA: true,
+      acceptTerms: false,
+    },
+  });
+
+  const onFormSubmit = async (values: ShowcaseFormValues) => {
+    setFormSubmittedData(null);
+    setFormServerError(null);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (simulateServerError) {
+      setFormServerError(
+        "Account registration failed: email address is already claimed by an enterprise SSO organization.",
+      );
+      return;
+    }
+
+    setFormSubmittedData(values);
+  };
 
   const studentColumns: ColumnDef<StudentRecord>[] = React.useMemo(
     () => [
@@ -982,6 +1057,316 @@ export default function DesignSystemShowcase(): React.JSX.Element {
                     </Button>
                   }
                 />
+              </CardContent>
+            </Card>
+          </section>
+
+          <Separator />
+
+          {/* Section 8: Reusable Form & Validation System */}
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    8. Reusable Form &amp; Validation System
+                  </h2>
+                  <Badge variant="outline">Zod &amp; Radix</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Type-safe form foundation powered by react-hook-form, Zod schema validation,
+                  server error alerts, and accessible controls.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSimulateServerError((prev) => !prev);
+                    setFormServerError(null);
+                  }}
+                  className="text-xs h-8"
+                >
+                  {simulateServerError ? "Simulate Server Error: ON" : "Simulate Server Error"}
+                </Button>
+              </div>
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8">
+                    <FormErrorSummary message={formServerError} errors={form.formState.errors} />
+
+                    {formSubmittedData && (
+                      <Alert
+                        variant="default"
+                        className="bg-success/10 border-success/30 text-success-foreground py-3"
+                      >
+                        <CheckCircle2 className="size-4 text-success" />
+                        <AlertTitle className="text-sm font-semibold">
+                          Form Validated &amp; Submitted
+                        </AlertTitle>
+                        <AlertDescription className="text-xs space-y-2 mt-1">
+                          <p>Payload successfully verified against Zod schema:</p>
+                          <pre className="p-3 rounded-md bg-muted font-mono text-[11px] overflow-x-auto text-foreground">
+                            {JSON.stringify(formSubmittedData, null, 2)}
+                          </pre>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <FormSection
+                      title="Personal Information"
+                      description="Primary user identity details and contact credentials"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel required>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Jane Doe" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                Official legal or professional name.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel required>Business Email</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="jane.doe@company.com" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                Used for account login and notifications.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel optional>Phone Number</FormLabel>
+                              <FormControl>
+                                <Input type="tel" placeholder="+1 (555) 012-3456" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                For SMS verification and urgent alerts.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel required>Password</FormLabel>
+                              <FormControl>
+                                <PasswordInput placeholder="Create secure password" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                At least 8 chars with an uppercase letter and a number.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </FormSection>
+
+                    <Separator />
+
+                    <FormSection
+                      title="Role &amp; Communication Preferences"
+                      description="Workspace permissions and notification channels"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="role"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel required>Account Role</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a role" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="developer">Developer</SelectItem>
+                                  <SelectItem value="manager">Project Manager</SelectItem>
+                                  <SelectItem value="designer">UI / UX Designer</SelectItem>
+                                  <SelectItem value="admin">System Administrator</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Controls accessible modules and actions.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="notificationChannel"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel required>Notification Channel</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-col space-y-1.5"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="email" id="nc-email" />
+                                    <Label
+                                      htmlFor="nc-email"
+                                      className="font-normal text-xs cursor-pointer"
+                                    >
+                                      Email Digest (Daily summary)
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="slack" id="nc-slack" />
+                                    <Label
+                                      htmlFor="nc-slack"
+                                      className="font-normal text-xs cursor-pointer"
+                                    >
+                                      Slack Channel (Real-time updates)
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="sms" id="nc-sms" />
+                                    <Label
+                                      htmlFor="nc-sms"
+                                      className="font-normal text-xs cursor-pointer"
+                                    >
+                                      SMS (Security alerts only)
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel optional>Biography &amp; Notes</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Tell your team about your background, projects, or responsibilities..."
+                                className="resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Max 200 characters displayed on team directory.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </FormSection>
+
+                    <Separator />
+
+                    <FormSection
+                      title="Security Safeguards &amp; Terms"
+                      description="Multi-factor authentication and platform policy consent"
+                    >
+                      <FormField
+                        control={form.control}
+                        name="enable2FA"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-3 shadow-xs">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-sm font-medium">
+                                Two-Factor Authentication (2FA)
+                              </FormLabel>
+                              <FormDescription className="text-xs">
+                                Require an authenticator app confirmation code on every login.
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="acceptTerms"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border border-border p-3 shadow-xs">
+                            <FormControl>
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel required className="text-xs font-medium cursor-pointer">
+                                I agree to the Softtech Core Master Services Agreement and Privacy
+                                Policy
+                              </FormLabel>
+                              <FormDescription className="text-xs">
+                                Consent is required before workspace access is provisioned.
+                              </FormDescription>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </FormSection>
+
+                    <FormActions align="end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          form.reset();
+                          setFormSubmittedData(null);
+                          setFormServerError(null);
+                        }}
+                        disabled={form.formState.isSubmitting}
+                      >
+                        Reset
+                      </Button>
+                      <Button type="submit" loading={form.formState.isSubmitting} className="gap-2">
+                        <Send className="size-3.5" />
+                        Submit Registration
+                      </Button>
+                    </FormActions>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </section>

@@ -305,10 +305,170 @@ export function ServerTable() {
 
 ---
 
-## 8. Running Tests and Checks
+## 8. Form & Validation System
+
+`@softtech/ui` provides a composable, accessible form foundation built on top of `react-hook-form`, `zod`, and Radix UI primitives.
+
+### Available Primitives & Inputs
+
+| Component                      | Description                                                                     |
+| :----------------------------- | :------------------------------------------------------------------------------ |
+| `Form`                         | Context provider wrapping `react-hook-form`'s `FormProvider`.                   |
+| `FormField`                    | Controller wrapper connecting inputs to form state and validation schemas.      |
+| `FormItem`                     | Scoped field container providing unique IDs and accessibility context.          |
+| `FormLabel`                    | Accessible label with optional `required` asterisk or `optional` indicator.     |
+| `FormControl`                  | Radix Slot forwarding `id`, `aria-describedby`, and `aria-invalid` to controls. |
+| `FormDescription`              | Muted helper text connected via `aria-describedby`.                             |
+| `FormMessage`                  | Accessible error message styled with `text-destructive`.                        |
+| `FormSection`                  | Grouping container with section title and description.                          |
+| `FormActions`                  | Footer container for submit, reset, and cancel actions with flexible alignment. |
+| `FormErrorSummary`             | Alert summarizing top-level server errors or listing all validation failures.   |
+| `PasswordInput`                | Input with built-in toggle button (`Eye` / `EyeOff`) for password visibility.   |
+| `RadioGroup`, `RadioGroupItem` | Accessible radio button group powered by `@radix-ui/react-radio-group`.         |
+
+### Client-Side Form with Zod Schema Validation
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { z } from "zod";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormSection,
+  FormActions,
+  FormErrorSummary,
+  Input,
+  PasswordInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  RadioGroup,
+  RadioGroupItem,
+  Checkbox,
+  Switch,
+  Button,
+  useForm,
+  zodResolver,
+} from "@softtech/ui";
+
+const signupSchema = z.object({
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  role: z.string().min(1, "Please select a role"),
+  notificationMethod: z.enum(["email", "slack", "sms"]),
+  twoFactorAuth: z.boolean(),
+  agreeToTerms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms of service",
+  }),
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
+
+export function RegistrationForm() {
+  const [serverError, setServerError] = React.useState<string | null>(null);
+
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      role: "developer",
+      notificationMethod: "email",
+      twoFactorAuth: true,
+      agreeToTerms: false,
+    },
+  });
+
+  const onSubmit = async (values: SignupFormValues) => {
+    setServerError(null);
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        setServerError(errorData.message ?? "Registration failed");
+      }
+    } catch (err) {
+      setServerError("Network error. Please try again.");
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormErrorSummary message={serverError} errors={form.formState.errors} />
+
+        <FormSection title="Account Details" description="Enter your credentials">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Jane Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Password</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder="Create password" {...field} />
+                </FormControl>
+                <FormDescription>At least 8 characters.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </FormSection>
+
+        <FormActions align="end">
+          <Button type="button" variant="outline" onClick={() => form.reset()}>
+            Reset
+          </Button>
+          <Button type="submit" loading={form.formState.isSubmitting}>
+            Submit
+          </Button>
+        </FormActions>
+      </form>
+    </Form>
+  );
+}
+```
+
+### Next.js App Router Guidelines
+
+- **Client Components**: All forms utilizing `react-hook-form` require the `"use client"` directive because they track reactive state, handle events, and access browser APIs.
+- **Server Action Integration**: Pass the validated data from `handleSubmit(onSubmit)` to your Server Actions or route handlers. On action rejection, use `form.setError(fieldName, { message })` or `FormErrorSummary` to render accessible feedback.
+
+---
+
+## 9. Running Tests and Checks
 
 ```bash
-# Run Vitest test suite (including component and DataTable tests)
+# Run Vitest test suite (including component, DataTable, and form tests)
 pnpm test
 
 # Type-check shared UI package
