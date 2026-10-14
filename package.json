@@ -10,7 +10,8 @@
     "format:check": "prettier --check .",
     "lint": "eslint . && pnpm --recursive --if-present run lint",
     "type-check": "pnpm --recursive --if-present run type-check",
-    "build": "pnpm --recursive --if-present run build"
+    "build": "pnpm --recursive --if-present run build",
+    "test": "pnpm --recursive --if-present run test"
   },
   "devDependencies": {
     "@eslint/js": "^9",
