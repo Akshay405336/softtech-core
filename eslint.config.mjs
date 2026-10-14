@@ -10,6 +10,7 @@ export default [
       "**/build/**",
       "**/coverage/**",
       "**/out/**",
+      "apps/**",
     ],
   },
   {

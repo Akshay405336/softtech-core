@@ -1,0 +1,13 @@
+{
+  "name": "@softtech/typescript-check",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript verification tooling for Softtech Core",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@softtech/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

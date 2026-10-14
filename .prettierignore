@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs and caches
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# Lockfiles
+pnpm-lock.yaml
+apps/web/pnpm-lock.yaml
+
+# Next.js generated types
+next-env.d.ts

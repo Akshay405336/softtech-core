@@ -37,3 +37,9 @@ Thumbs.db
 
 # Local operating system files
 Desktop.ini
+
+# Next.js and deployment
+.vercel/
+*.pem
+next-env.d.ts
+
