@@ -622,10 +622,121 @@ export function RevokeKeyButton() {
 
 ---
 
-## 10. Running Tests and Checks
+## 10. File Upload & Media Management System
+
+`@softtech/ui` provides a composable, accessible file upload and media management foundation supporting drag-and-drop, client-side validation, object URL memory cleanup, and reorderable galleries.
+
+### Available Components
+
+| Component            | Description                                                                                          |
+| :------------------- | :--------------------------------------------------------------------------------------------------- |
+| `FileUpload`         | Main upload surface managing dropzone, file list, rejection alerts, and lifecycle progress.          |
+| `FileUploadDropzone` | Drag-and-drop and click-to-select zone with keyboard accessibility and visual drag cues.             |
+| `FileUploadList`     | Container displaying selected file rows with "Clear all" action.                                     |
+| `FileUploadItem`     | Individual file card showing preview thumbnail, formatted size, status, progress, and retry/remove.  |
+| `FilePreview`        | Categorized preview rendering image/video thumbnails or semantic icons (PDF, doc, archive, code).    |
+| `ImageUpload`        | Single-image upload for profile avatars, logos, or cover photos with circular or square crops.       |
+| `MediaGallery`       | Grid gallery for uploaded media supporting primary cover badges, accessible reordering, and removal. |
+| `UploadProgress`     | Progress bar with `role="progressbar"`, live percentages, and status variants.                       |
+
+### Multi-File Upload with Validation
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { FileUpload, type UploadFileItem } from "@softtech/ui";
+
+export function AttachmentUpload() {
+  const [files, setFiles] = React.useState<UploadFileItem[]>([]);
+
+  const handleUpload = async (item: UploadFileItem) => {
+    // Consuming application executes upload (e.g. presigned S3 / Cloudflare R2 / Server Action)
+    const formData = new FormData();
+    formData.append("file", item.file);
+    await fetch("/api/upload", { method: "POST", body: formData });
+  };
+
+  return (
+    <FileUpload
+      files={files}
+      onFilesChange={setFiles}
+      validation={{
+        maxSize: 10 * 1024 * 1024, // 10MB
+        maxFiles: 5,
+        accept: ["image/*", "application/pdf", ".docx", ".zip"],
+      }}
+      onUpload={handleUpload}
+    />
+  );
+}
+```
+
+### Avatar & Single-Image Upload
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { ImageUpload } from "@softtech/ui";
+
+export function UserProfilePicture() {
+  const [avatar, setAvatar] = React.useState<File | string | null>(null);
+
+  return (
+    <ImageUpload
+      value={avatar}
+      onChange={setAvatar}
+      shape="circle"
+      size="lg"
+      validation={{
+        maxSize: 5 * 1024 * 1024,
+        accept: ["image/*"],
+      }}
+    />
+  );
+}
+```
+
+### Media Gallery with Accessible Reordering
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { MediaGallery, type MediaItem } from "@softtech/ui";
+
+export function CourseGallery() {
+  const [media, setMedia] = React.useState<MediaItem[]>([
+    { id: "1", url: "/thumb1.jpg", name: "Lesson 1", isPrimary: true },
+    { id: "2", url: "/thumb2.jpg", name: "Lesson 2", isPrimary: false },
+  ]);
+
+  return (
+    <MediaGallery
+      items={media}
+      columns={3}
+      onReorder={setMedia}
+      onSetPrimary={(id) =>
+        setMedia((prev) => prev.map((item) => ({ ...item, isPrimary: item.id === id })))
+      }
+      onRemove={(id) => setMedia((prev) => prev.filter((item) => item.id !== id))}
+    />
+  );
+}
+```
+
+### Security & Server Boundary Disclaimer
+
+> [!IMPORTANT]
+> Client-side validation improves user experience by filtering accidental uploads before network transmission. However, client checks **do not** prove a file is safe or malicious-free. Production backends must independently verify MIME types, scan for malware, enforce authorization, and store files on dedicated object storage with appropriate Content-Disposition headers.
+
+---
+
+## 11. Running Tests and Checks
 
 ```bash
-# Run Vitest test suite (including component, DataTable, form, and notification tests)
+# Run Vitest test suite (including component, DataTable, form, notification, and file upload tests)
 pnpm test
 
 # Type-check shared UI package

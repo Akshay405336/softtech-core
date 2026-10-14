@@ -76,6 +76,11 @@ import {
   ConfirmDialog,
   useConfirm,
   ToastAction,
+  FileUpload,
+  ImageUpload,
+  MediaGallery,
+  type MediaItem,
+  type UploadFileItem,
 } from "@softtech/ui";
 import { z } from "zod";
 import {
@@ -240,6 +245,45 @@ const showcaseFormSchema = z.object({
 
 type ShowcaseFormValues = z.infer<typeof showcaseFormSchema>;
 
+const initialGalleryMedia: MediaItem[] = [
+  {
+    id: "med-1",
+    url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+    name: "architecture-workspace.jpg",
+    type: "image",
+    size: 1548200,
+    isPrimary: true,
+    alt: "Architecture Workspace",
+  },
+  {
+    id: "med-2",
+    url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80",
+    name: "dashboard-analytics.jpg",
+    type: "image",
+    size: 2145800,
+    isPrimary: false,
+    alt: "Analytics Dashboard",
+  },
+  {
+    id: "med-3",
+    url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=80",
+    name: "security-encryption.jpg",
+    type: "image",
+    size: 1894100,
+    isPrimary: false,
+    alt: "Security Matrix",
+  },
+  {
+    id: "med-4",
+    url: "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=600&auto=format&fit=crop&q=80",
+    name: "cloud-infrastructure.jpg",
+    type: "image",
+    size: 3204900,
+    isPrimary: false,
+    alt: "Cloud Infrastructure",
+  },
+];
+
 export default function DesignSystemShowcase(): React.JSX.Element {
   const [checked, setChecked] = React.useState<boolean>(false);
   const [switched, setSwitched] = React.useState<boolean>(true);
@@ -247,6 +291,58 @@ export default function DesignSystemShowcase(): React.JSX.Element {
   const [isTableLoading, setIsTableLoading] = React.useState<boolean>(false);
   const [isEmptyData, setIsEmptyData] = React.useState<boolean>(false);
   const [selectedStudents, setSelectedStudents] = React.useState<StudentRecord[]>([]);
+
+  // File Upload & Media Showcase state
+  const [demoUploadFiles, setDemoUploadFiles] = React.useState<UploadFileItem[]>([]);
+  const [avatarUpload, setAvatarUpload] = React.useState<File | string | null>(null);
+  const [galleryMedia, setGalleryMedia] = React.useState<MediaItem[]>(initialGalleryMedia);
+
+  const handleUploadSingleFile = (item: UploadFileItem) => {
+    setDemoUploadFiles((prev) =>
+      prev.map((f) => (f.id === item.id ? { ...f, status: "uploading", progress: 20 } : f)),
+    );
+
+    setTimeout(() => {
+      setDemoUploadFiles((prev) =>
+        prev.map((f) => (f.id === item.id ? { ...f, status: "uploading", progress: 65 } : f)),
+      );
+    }, 400);
+
+    setTimeout(() => {
+      setDemoUploadFiles((prev) =>
+        prev.map((f) => (f.id === item.id ? { ...f, status: "success", progress: 100 } : f)),
+      );
+      toast.success(`Uploaded ${item.name}`);
+    }, 900);
+  };
+
+  const handleUploadAllFiles = (items: UploadFileItem[]) => {
+    const pending = items.filter((f) => f.status === "idle" || f.status === "error");
+    if (pending.length === 0) return;
+
+    setDemoUploadFiles((prev) =>
+      prev.map((f) =>
+        f.status === "idle" || f.status === "error"
+          ? { ...f, status: "uploading", progress: 30 }
+          : f,
+      ),
+    );
+
+    setTimeout(() => {
+      setDemoUploadFiles((prev) =>
+        prev.map((f) => (f.status === "uploading" ? { ...f, progress: 75 } : f)),
+      );
+    }, 500);
+
+    setTimeout(() => {
+      setDemoUploadFiles((prev) =>
+        prev.map((f) =>
+          f.status === "uploading" ? { ...f, status: "success", progress: 100 } : f,
+        ),
+      );
+      toast.success(`Batch upload completed (${pending.length} files)`);
+    }, 1100);
+  };
 
   // Form showcase state
   const [formSubmittedData, setFormSubmittedData] = React.useState<ShowcaseFormValues | null>(null);
@@ -1669,6 +1765,136 @@ export default function DesignSystemShowcase(): React.JSX.Element {
                 </CardFooter>
               </Card>
             </div>
+          </section>
+
+          <Separator />
+
+          {/* Section 10: File Upload & Media Management System */}
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    10. File Upload &amp; Media Management System
+                  </h2>
+                  <Badge variant="outline">Drag &amp; Drop Ready</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Type-safe file selection, client-side validation, object URL management, upload
+                  lifecycle progress, and reorderable media galleries.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Card 1: Multi-File Dropzone & Upload List */}
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Document &amp; Asset Upload</CardTitle>
+                    <CardDescription>
+                      Multi-file dropzone with size validation (up to 10MB), accepted file types,
+                      upload progress simulation, and retry handling.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FileUpload
+                      files={demoUploadFiles}
+                      onFilesChange={setDemoUploadFiles}
+                      validation={{
+                        maxSize: 10 * 1024 * 1024,
+                        maxFiles: 5,
+                        accept: ["image/*", "application/pdf", ".docx", ".zip"],
+                      }}
+                      onUpload={handleUploadSingleFile}
+                      onUploadAll={handleUploadAllFiles}
+                      onRetry={handleUploadSingleFile}
+                    />
+                  </CardContent>
+                  <CardFooter className="text-xs text-muted-foreground border-t border-border pt-4">
+                    Object URLs are automatically revoked when files are removed or when the
+                    component unmounts.
+                  </CardFooter>
+                </Card>
+              </div>
+
+              {/* Card 2: Single Image & Avatar Upload */}
+              <div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Profile Avatar Upload</CardTitle>
+                    <CardDescription>
+                      Convenient single-image wrapper with circular crop preview, hover overlay, and
+                      remove controls.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
+                    <ImageUpload
+                      value={avatarUpload}
+                      onChange={setAvatarUpload}
+                      shape="circle"
+                      size="lg"
+                      validation={{
+                        maxSize: 5 * 1024 * 1024,
+                        accept: ["image/*"],
+                      }}
+                      onError={(err) => toast.error(err)}
+                    />
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      PNG, JPG, or WEBP up to 5MB. Click to upload or drag photo onto the circle.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Media Gallery Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">Media Asset Gallery</CardTitle>
+                    <CardDescription>
+                      Responsive media showcase supporting cover badge flags, accessible keyboard
+                      reordering, and item removal.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGalleryMedia(initialGalleryMedia)}
+                    className="text-xs h-8"
+                  >
+                    Reset Demo Gallery
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <MediaGallery
+                  items={galleryMedia}
+                  columns={4}
+                  onReorder={setGalleryMedia}
+                  onSetPrimary={(id) => {
+                    setGalleryMedia((prev) =>
+                      prev.map((item) => ({
+                        ...item,
+                        isPrimary: item.id === id,
+                      })),
+                    );
+                    toast.success("Cover image updated");
+                  }}
+                  onRemove={(id) => {
+                    setGalleryMedia((prev) => prev.filter((item) => item.id !== id));
+                    toast.info("Media item removed from gallery");
+                  }}
+                />
+              </CardContent>
+              <CardFooter className="text-xs text-muted-foreground border-t border-border pt-4">
+                Use the left/right arrow buttons on each card to reorder items with full
+                accessibility support.
+              </CardFooter>
+            </Card>
           </section>
         </main>
       </div>

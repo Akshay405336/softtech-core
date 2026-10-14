@@ -181,3 +181,33 @@ export {
   type ToastOptions,
   type ToasterToast,
 } from "./components/toast";
+
+// File Upload & Media Management System
+export {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadList,
+  FilePreview,
+  ImageUpload,
+  MediaGallery,
+  UploadProgress,
+  formatBytes,
+  getFileCategory,
+  matchesAccept,
+  validateFile,
+  validateFiles,
+  type FileUploadProps,
+  type FileUploadDropzoneProps,
+  type FileUploadItemProps,
+  type FileUploadListProps,
+  type FilePreviewProps,
+  type ImageUploadProps,
+  type MediaGalleryProps,
+  type UploadProgressProps,
+  type FileRejection,
+  type FileValidationOptions,
+  type MediaItem,
+  type UploadFileItem,
+  type UploadStatus,
+} from "./components/file-upload";
