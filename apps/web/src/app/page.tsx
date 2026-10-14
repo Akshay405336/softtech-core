@@ -72,10 +72,15 @@ import {
   PasswordInput,
   useForm,
   zodResolver,
+  toast,
+  ConfirmDialog,
+  useConfirm,
+  ToastAction,
 } from "@softtech/ui";
 import { z } from "zod";
 import {
   AlertCircle,
+  AlertTriangle,
   Bell,
   CheckCircle2,
   ChevronRight,
@@ -247,6 +252,69 @@ export default function DesignSystemShowcase(): React.JSX.Element {
   const [formSubmittedData, setFormSubmittedData] = React.useState<ShowcaseFormValues | null>(null);
   const [formServerError, setFormServerError] = React.useState<string | null>(null);
   const [simulateServerError, setSimulateServerError] = React.useState<boolean>(false);
+
+  // Notification & Confirmation showcase state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState<boolean>(false);
+  const [isDeletingProject, setIsDeletingProject] = React.useState<boolean>(false);
+  const [asyncDeploymentLoading, setAsyncDeploymentLoading] = React.useState<boolean>(false);
+  const { confirm: confirmAction, ConfirmDialog: ConfirmDialogElement } = useConfirm();
+
+  const handleSimulateDeployment = async () => {
+    setAsyncDeploymentLoading(true);
+    try {
+      await toast.promise(
+        new Promise<string>((resolve, reject) => {
+          setTimeout(() => {
+            const isSuccess = Math.random() > 0.25;
+            if (isSuccess) {
+              resolve("Edge worker cluster deployed across 42 regions (v1.4.0).");
+            } else {
+              reject(new Error("Deploy timeout: region us-east-1 did not respond."));
+            }
+          }, 1500);
+        }),
+        {
+          loading: "Deploying edge worker cluster...",
+          success: (msg) => String(msg),
+          error: (err) => (err instanceof Error ? err.message : "Deployment failed"),
+        },
+      );
+    } catch {
+      // Handled and presented by toast.promise
+    } finally {
+      setAsyncDeploymentLoading(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    setIsDeletingProject(true);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    setIsDeletingProject(false);
+    setIsDeleteDialogOpen(false);
+    toast.error("Project 'Softtech Alpha' permanently deleted", {
+      description: "All database instances and deployments have been purged.",
+    });
+  };
+
+  const handleRevokeApiKey = async () => {
+    const confirmed = await confirmAction({
+      title: "Revoke Production API Key?",
+      description:
+        "Any external microservices or third-party webhooks currently relying on 'pk_live_9482...' will immediately lose access.",
+      confirmLabel: "Revoke Key",
+      variant: "destructive",
+    });
+
+    if (confirmed) {
+      toast.success("API key revoked", {
+        description: "A replacement key has been queued for regeneration.",
+      });
+    } else {
+      toast.info("Action cancelled", {
+        description: "The API key remains active and unaffected.",
+      });
+    }
+  };
 
   const form = useForm<ShowcaseFormValues>({
     resolver: zodResolver(showcaseFormSchema),
@@ -1369,6 +1437,238 @@ export default function DesignSystemShowcase(): React.JSX.Element {
                 </Form>
               </CardContent>
             </Card>
+          </section>
+
+          <Separator />
+
+          {/* Section 9: Notification & Confirmation System */}
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    9. Notification &amp; Confirmation System
+                  </h2>
+                  <Badge variant="outline">Accessible &amp; Stateful</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  WAI-ARIA compliant toasts for success, error, warning, info, and loading states,
+                  plus declarative and hook-based confirmation dialogs.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toast.dismiss()}
+                  className="text-xs h-8"
+                >
+                  Dismiss All Toasts
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Toast Notifications */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Toast Notifications</CardTitle>
+                  <CardDescription>
+                    Trigger non-blocking notifications with custom descriptions, durations, and
+                    action handlers.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                      Notification Types
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toast.success("Project exported successfully", {
+                            description: "Bundle artifacts generated at dist/bundle.zip (2.4MB).",
+                          })
+                        }
+                        className="text-xs border-success/40 text-success hover:bg-success/10 hover:text-success"
+                      >
+                        <CheckCircle2 className="mr-1.5 size-3.5" />
+                        Success Toast
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toast.error("Cluster connection timed out", {
+                            description:
+                              "API gateway did not respond within 30000ms. Check VPC peering.",
+                          })
+                        }
+                        className="text-xs border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <AlertCircle className="mr-1.5 size-3.5" />
+                        Error Toast
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toast.warning("High memory utilization", {
+                            description:
+                              "Kubernetes pod is utilizing 89% of assigned memory limits.",
+                          })
+                        }
+                        className="text-xs border-warning/40 text-warning hover:bg-warning/10 hover:text-warning"
+                      >
+                        <AlertTriangle className="mr-1.5 size-3.5" />
+                        Warning Toast
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toast.info("Database migration scheduled", {
+                            description:
+                              "Automated schema migration planned for 02:00 UTC maintenance.",
+                          })
+                        }
+                        className="text-xs border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Info className="mr-1.5 size-3.5" />
+                        Info Toast
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                      Interactive Actions &amp; Async Promises
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          toast({
+                            title: "Invoice #INV-2026 archived",
+                            description: "Moved to cold storage repository.",
+                            action: (
+                              <ToastAction
+                                altText="Undo archive action"
+                                onClick={() =>
+                                  toast.info("Archive restored", {
+                                    description: "Invoice #INV-2026 restored to active billing.",
+                                  })
+                                }
+                              >
+                                Undo
+                              </ToastAction>
+                            ),
+                          })
+                        }
+                        className="text-xs"
+                      >
+                        Toast with Action
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        onClick={handleSimulateDeployment}
+                        loading={asyncDeploymentLoading}
+                        className="text-xs"
+                      >
+                        <RefreshCw
+                          className={`mr-1.5 size-3.5 ${asyncDeploymentLoading ? "animate-spin" : ""}`}
+                        />
+                        Simulate Async Deployment
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="text-xs text-muted-foreground border-t border-border pt-4">
+                  Loading notifications persist with infinite duration until completed or dismissed.
+                </CardFooter>
+              </Card>
+
+              {/* Card 2: Confirmation Dialogs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Confirmation Dialogs</CardTitle>
+                  <CardDescription>
+                    Accessible modal prompts protecting destructive actions and critical decision
+                    boundaries.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                      Declarative Confirmation
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Controlled modal with integrated loading state, destructive variant icons, and
+                      asynchronous confirmation handling.
+                    </p>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-xs"
+                    >
+                      <Trash2 className="mr-1.5 size-3.5" />
+                      Delete Project (Declarative)
+                    </Button>
+
+                    <ConfirmDialog
+                      open={isDeleteDialogOpen}
+                      onOpenChange={setIsDeleteDialogOpen}
+                      title="Permanently Delete 'Softtech Alpha'?"
+                      description="This action cannot be undone. It will immediately terminate 4 active microservices, unmount the primary persistent volume, and purge historical log indices."
+                      confirmLabel="Delete Project"
+                      variant="destructive"
+                      loading={isDeletingProject}
+                      onConfirm={handleDeleteProject}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                      Hook-Based Confirmation
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Promise-driven{" "}
+                      <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px]">
+                        useConfirm()
+                      </code>{" "}
+                      hook for ergonomic inline async/await confirmation flows.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRevokeApiKey}
+                      className="text-xs"
+                    >
+                      Revoke API Key (useConfirm Hook)
+                    </Button>
+
+                    {/* Hook Dialog Component */}
+                    <ConfirmDialogElement />
+                  </div>
+                </CardContent>
+                <CardFooter className="text-xs text-muted-foreground border-t border-border pt-4">
+                  Full keyboard navigation: Tab focus trapping, Esc to cancel, and Enter to confirm.
+                </CardFooter>
+              </Card>
+            </div>
           </section>
         </main>
       </div>

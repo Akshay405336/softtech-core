@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@softtech/ui";
+import { ThemeProvider, Toaster } from "@softtech/ui";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">): React.JSX.El
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

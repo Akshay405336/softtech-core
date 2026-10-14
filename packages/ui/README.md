@@ -465,10 +465,167 @@ export function RegistrationForm() {
 
 ---
 
-## 9. Running Tests and Checks
+## 9. Notification & Confirmation System
+
+`@softtech/ui` includes an accessible, stateful notification and confirmation foundation built on Radix UI primitives (`@radix-ui/react-toast` and `@radix-ui/react-alert-dialog`).
+
+### Setup in Root Layout
+
+Render `<Toaster />` once inside your root layout within `ThemeProvider`:
+
+```tsx
+// apps/<app-name>/src/app/layout.tsx
+import { ThemeProvider, Toaster } from "@softtech/ui";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Toast Notification API
+
+Trigger notifications from any client component without wrapping the component in context providers:
+
+```tsx
+"use client";
+
+import { toast, ToastAction, Button } from "@softtech/ui";
+
+export function NotificationDemo() {
+  return (
+    <div className="flex gap-2">
+      {/* Typed variants */}
+      <Button onClick={() => toast.success("Project exported successfully")}>Success</Button>
+
+      <Button onClick={() => toast.error("Cluster connection failed")}>Error</Button>
+
+      <Button onClick={() => toast.warning("Approaching monthly quota limit")}>Warning</Button>
+
+      <Button onClick={() => toast.info("New release v1.4.0 available")}>Info</Button>
+
+      {/* Toast with Action */}
+      <Button
+        onClick={() =>
+          toast({
+            title: "File moved to trash",
+            action: (
+              <ToastAction altText="Undo file deletion" onClick={() => toast.info("File restored")}>
+                Undo
+              </ToastAction>
+            ),
+          })
+        }
+      >
+        With Action
+      </Button>
+
+      {/* Async Promises with Loading States */}
+      <Button
+        onClick={() =>
+          toast.promise(fetch("/api/deploy", { method: "POST" }), {
+            loading: "Deploying edge cluster...",
+            success: "Deployment completed across all regions!",
+            error: "Deployment failed to reach quorum",
+          })
+        }
+      >
+        Async Promise
+      </Button>
+    </div>
+  );
+}
+```
+
+### Confirmation Dialogs
+
+Protect destructive operations using either declarative or imperative patterns:
+
+#### 1. Declarative `<ConfirmDialog />`
+
+```tsx
+"use client";
+
+import * as React from "react";
+import { ConfirmDialog, Button } from "@softtech/ui";
+
+export function DeleteProjectButton() {
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+
+  const handleDelete = async () => {
+    setLoading(true);
+    await fetch("/api/projects/1", { method: "DELETE" });
+    setLoading(false);
+  };
+
+  return (
+    <>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
+        Delete Project
+      </Button>
+
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Permanently Delete Project?"
+        description="This action cannot be undone. All microservices and associated storage volumes will be deleted."
+        confirmLabel="Delete Project"
+        variant="destructive"
+        loading={loading}
+        onConfirm={handleDelete}
+      />
+    </>
+  );
+}
+```
+
+#### 2. Imperative `useConfirm()` Hook
+
+```tsx
+"use client";
+
+import { useConfirm, Button, toast } from "@softtech/ui";
+
+export function RevokeKeyButton() {
+  const { confirm, ConfirmDialog } = useConfirm();
+
+  const handleRevoke = async () => {
+    const ok = await confirm({
+      title: "Revoke API Key?",
+      description: "Any external services using this key will immediately lose access.",
+      confirmLabel: "Revoke Key",
+      variant: "destructive",
+    });
+
+    if (ok) {
+      toast.success("API key revoked");
+    }
+  };
+
+  return (
+    <>
+      <Button onClick={handleRevoke}>Revoke Key</Button>
+      <ConfirmDialog />
+    </>
+  );
+}
+```
+
+---
+
+## 10. Running Tests and Checks
 
 ```bash
-# Run Vitest test suite (including component, DataTable, and form tests)
+# Run Vitest test suite (including component, DataTable, form, and notification tests)
 pnpm test
 
 # Type-check shared UI package
