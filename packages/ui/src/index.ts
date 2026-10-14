@@ -68,3 +68,41 @@ export { Skeleton } from "./components/skeleton";
 export { Spinner, spinnerVariants, type SpinnerProps } from "./components/spinner";
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components/alert";
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./components/tooltip";
+
+// Table Primitives
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from "./components/table";
+
+// Data Table System
+export {
+  DataTable,
+  DataTableColumnHeader,
+  DataTableToolbar,
+  DataTablePagination,
+  DataTableEmptyState,
+  DataTableLoading,
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+} from "./components/data-table";
+
+export type {
+  ColumnDef,
+  ColumnFiltersState,
+  DataTableFacetedFilterOption,
+  DataTableFilterableColumn,
+  DataTableProps,
+  PaginationState,
+  Row,
+  RowSelectionState,
+  SortingState,
+  Table as TanStackTable,
+  VisibilityState,
+} from "./components/data-table";

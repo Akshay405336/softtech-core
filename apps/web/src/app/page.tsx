@@ -53,23 +53,295 @@ import {
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
+  DataTable,
+  DataTableColumnHeader,
+  type ColumnDef,
+  type DataTableFilterableColumn,
 } from "@softtech/ui";
 import {
   AlertCircle,
   Bell,
   CheckCircle2,
   ChevronRight,
+  Clock,
+  Edit,
+  Eye,
+  GraduationCap,
   Info,
   Mail,
+  MoreHorizontal,
   Plus,
+  RefreshCw,
   Trash2,
-
 } from "lucide-react";
+
+interface StudentRecord {
+  id: string;
+  name: string;
+  email: string;
+  course: string;
+  batch: string;
+  status: "Active" | "Pending" | "Graduated";
+  score: number;
+}
+
+const mockStudents: StudentRecord[] = [
+  {
+    id: "STU-001",
+    name: "Alice Johnson",
+    email: "alice.j@softtech.edu",
+    course: "Fullstack Architecture",
+    batch: "2026-Q1",
+    status: "Active",
+    score: 96,
+  },
+  {
+    id: "STU-002",
+    name: "Bob Smith",
+    email: "bob.smith@softtech.edu",
+    course: "Cloud Engineering",
+    batch: "2026-Q1",
+    status: "Pending",
+    score: 81,
+  },
+  {
+    id: "STU-003",
+    name: "Charlie Davis",
+    email: "charlie.d@softtech.edu",
+    course: "UI / UX Systems",
+    batch: "2025-Q4",
+    status: "Graduated",
+    score: 89,
+  },
+  {
+    id: "STU-004",
+    name: "Diana Prince",
+    email: "diana.p@softtech.edu",
+    course: "Fullstack Architecture",
+    batch: "2026-Q1",
+    status: "Active",
+    score: 99,
+  },
+  {
+    id: "STU-005",
+    name: "Ethan Hunt",
+    email: "ethan.h@softtech.edu",
+    course: "DevOps & SRE",
+    batch: "2026-Q2",
+    status: "Pending",
+    score: 74,
+  },
+  {
+    id: "STU-006",
+    name: "Fiona Gallagher",
+    email: "fiona.g@softtech.edu",
+    course: "Data Engineering",
+    batch: "2025-Q4",
+    status: "Graduated",
+    score: 92,
+  },
+  {
+    id: "STU-007",
+    name: "George Clark",
+    email: "george.c@softtech.edu",
+    course: "Cloud Engineering",
+    batch: "2026-Q2",
+    status: "Active",
+    score: 87,
+  },
+  {
+    id: "STU-008",
+    name: "Hannah Abbott",
+    email: "hannah.a@softtech.edu",
+    course: "UI / UX Systems",
+    batch: "2026-Q1",
+    status: "Pending",
+    score: 78,
+  },
+  {
+    id: "STU-009",
+    name: "Ian Malcolm",
+    email: "ian.m@softtech.edu",
+    course: "Data Engineering",
+    batch: "2026-Q1",
+    status: "Active",
+    score: 94,
+  },
+  {
+    id: "STU-010",
+    name: "Julia Roberts",
+    email: "julia.r@softtech.edu",
+    course: "Fullstack Architecture",
+    batch: "2025-Q4",
+    status: "Graduated",
+    score: 90,
+  },
+  {
+    id: "STU-011",
+    name: "Kevin Bacon",
+    email: "kevin.b@softtech.edu",
+    course: "DevOps & SRE",
+    batch: "2026-Q2",
+    status: "Active",
+    score: 85,
+  },
+  {
+    id: "STU-012",
+    name: "Laura Croft",
+    email: "laura.c@softtech.edu",
+    course: "Fullstack Architecture",
+    batch: "2026-Q1",
+    status: "Active",
+    score: 98,
+  },
+];
 
 export default function DesignSystemShowcase(): React.JSX.Element {
   const [checked, setChecked] = React.useState<boolean>(false);
   const [switched, setSwitched] = React.useState<boolean>(true);
   const [buttonLoading, setButtonLoading] = React.useState<boolean>(false);
+  const [isTableLoading, setIsTableLoading] = React.useState<boolean>(false);
+  const [isEmptyData, setIsEmptyData] = React.useState<boolean>(false);
+  const [selectedStudents, setSelectedStudents] = React.useState<StudentRecord[]>([]);
+
+  const studentColumns: ColumnDef<StudentRecord>[] = React.useMemo(
+    () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(Boolean(value))}
+            aria-label="Select all rows on page"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
+            aria-label={`Select student ${row.original.name}`}
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "id",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-muted-foreground">{row.getValue("id")}</span>
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Student Name" />,
+        cell: ({ row }) => (
+          <span className="font-medium text-foreground">{row.getValue("name")}</span>
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+      },
+      {
+        accessorKey: "course",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Course" />,
+      },
+      {
+        accessorKey: "batch",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Batch" />,
+        cell: ({ row }) => (
+          <Badge variant="outline" className="font-normal text-[11px]">
+            {row.getValue("batch")}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ row }) => {
+          const status = row.getValue("status") as string;
+          return (
+            <Badge
+              variant={
+                status === "Active" ? "success" : status === "Pending" ? "warning" : "secondary"
+              }
+            >
+              {status}
+            </Badge>
+          );
+        },
+        filterFn: (row, id, value) => {
+          return Array.isArray(value)
+            ? value.includes(row.getValue(id))
+            : row.getValue(id) === value;
+        },
+      },
+      {
+        accessorKey: "score",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="GPA / Score" />,
+        cell: ({ row }) => (
+          <span className="font-mono font-semibold">{row.getValue("score")}%</span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const student = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  aria-label={`Actions for ${student.name}`}
+                >
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 text-xs">
+                  <Eye className="size-3.5 text-muted-foreground" /> View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 text-xs">
+                  <Edit className="size-3.5 text-muted-foreground" /> Edit Enrollment
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 text-xs text-destructive focus:text-destructive">
+                  <Trash2 className="size-3.5" /> Remove Student
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+        enableSorting: false,
+        enableHiding: false,
+      },
+    ],
+    [],
+  );
+
+  const filterableColumns: DataTableFilterableColumn[] = React.useMemo(
+    () => [
+      {
+        id: "status",
+        title: "Status",
+        options: [
+          { label: "Active", value: "Active", icon: CheckCircle2 },
+          { label: "Pending", value: "Pending", icon: Clock },
+          { label: "Graduated", value: "Graduated", icon: GraduationCap },
+        ],
+      },
+    ],
+    [],
+  );
 
   return (
     <TooltipProvider>
@@ -635,6 +907,83 @@ export default function DesignSystemShowcase(): React.JSX.Element {
                 </CardFooter>
               </Card>
             </div>
+          </section>
+
+          <Separator />
+
+          {/* Section 7: Reusable Data Table System */}
+          <section className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    7. Reusable Data Table System
+                  </h2>
+                  <Badge variant="outline">Enterprise Ready</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Production-grade TanStack Table foundation with typed columns, sorting, global
+                  search, faceted status filters, pagination, and row selection.
+                </p>
+              </div>
+
+              {/* State Toggles for Showcase */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTableLoading((prev) => !prev)}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw className={`mr-1 size-3.5 ${isTableLoading ? "animate-spin" : ""}`} />
+                  {isTableLoading ? "Loading State: ON" : "Simulate Loading"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEmptyData((prev) => !prev)}
+                  className="text-xs h-8"
+                >
+                  {isEmptyData ? "Show Mock Records" : "Simulate Empty"}
+                </Button>
+              </div>
+            </div>
+
+            {selectedStudents.length > 0 && (
+              <Alert variant="default" className="bg-muted/50 border-primary/20 py-2.5">
+                <Info className="size-4 text-primary" />
+                <AlertTitle className="text-xs font-semibold">Active Row Selection</AlertTitle>
+                <AlertDescription className="text-xs">
+                  {selectedStudents.length} student(s) selected:{" "}
+                  {selectedStudents.map((s) => s.name).join(", ")}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Card>
+              <CardContent className="p-4 sm:p-6">
+                <DataTable
+                  columns={studentColumns}
+                  data={isEmptyData ? [] : mockStudents}
+                  searchKey="name"
+                  searchPlaceholder="Search student name..."
+                  filterableColumns={filterableColumns}
+                  isLoading={isTableLoading}
+                  enableRowSelection={true}
+                  onRowSelectionChange={setSelectedStudents}
+                  defaultPageSize={5}
+                  pageSizeOptions={[5, 10, 20]}
+                  emptyTitle="No student records found"
+                  emptyMessage="Try adjusting your search query or clear the status filter."
+                  toolbarActions={
+                    <Button size="sm" className="h-8 text-xs gap-1">
+                      <Plus className="size-3.5" />
+                      <span>Add Student</span>
+                    </Button>
+                  }
+                />
+              </CardContent>
+            </Card>
           </section>
         </main>
       </div>

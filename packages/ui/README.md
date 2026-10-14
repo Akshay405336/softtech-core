@@ -195,10 +195,120 @@ import {
 
 ---
 
-## 7. Running Tests and Checks
+## 7. Reusable Data Table System
+
+`@softtech/ui` provides a production-quality, type-safe data table foundation built on TanStack Table v8 and styled with Softtech Core design tokens.
+
+### Features
+
+- **Generic Row Types**: Fully typed `<TData, TValue>` without requiring `any`.
+- **Sorting**: Multi-column sorting with single-click direct toggle and visual indicators.
+- **Search & Filtering**: Global text search input and faceted multi-select dropdown filters.
+- **Pagination**: Configurable page sizes (10, 20, 50, 100), range indicator, and navigation buttons.
+- **Row Selection**: Checkbox column with page select-all and selection counter.
+- **Loading & Empty States**: Integrated skeleton rows and customizable empty state with reset buttons.
+- **Client & Server-Side Modes**: Seamless transition from in-memory processing to API-driven server pagination.
+
+### Basic Client-Side Example
+
+```tsx
+import * as React from "react";
+import { DataTable, DataTableColumnHeader, type ColumnDef, Badge } from "@softtech/ui";
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  status: "Active" | "Pending" | "Graduated";
+}
+
+const columns: ColumnDef<Student>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+  },
+  {
+    accessorKey: "email",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell: ({ row }) => (
+      <Badge variant={row.original.status === "Active" ? "success" : "secondary"}>
+        {row.original.status}
+      </Badge>
+    ),
+  },
+];
+
+export function StudentsList({ students }: { students: Student[] }) {
+  return (
+    <DataTable
+      columns={columns}
+      data={students}
+      searchKey="name"
+      searchPlaceholder="Search students..."
+      defaultPageSize={10}
+    />
+  );
+}
+```
+
+### Server-Side Pagination & Sorting Example
+
+In server-side mode, set `manualPagination: true` and `manualSorting: true`, providing the current page rows, total page count, and callbacks:
+
+```tsx
+export function ServerTable() {
+  const [data, setData] = React.useState<Student[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [pageCount, setPageCount] = React.useState(0);
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [search, setSearch] = React.useState("");
+
+  React.useEffect(() => {
+    // Fetch data from consuming application API
+    async function loadData() {
+      setIsLoading(true);
+      const res = await fetch(
+        `/api/students?page=${pagination.pageIndex}&size=${pagination.pageSize}&sort=${sorting[0]?.id}&dir=${sorting[0]?.desc ? "desc" : "asc"}&q=${search}`,
+      );
+      const json = await res.json();
+      setData(json.items);
+      setPageCount(json.totalPages);
+      setIsLoading(false);
+    }
+    loadData();
+  }, [pagination, sorting, search]);
+
+  return (
+    <DataTable
+      columns={columns}
+      data={data}
+      manualPagination
+      pageCount={pageCount}
+      pagination={pagination}
+      onPaginationChange={setPagination}
+      manualSorting
+      sorting={sorting}
+      onSortingChange={setSorting}
+      manualFiltering
+      searchQuery={search}
+      onSearchChange={setSearch}
+      isLoading={isLoading}
+    />
+  );
+}
+```
+
+---
+
+## 8. Running Tests and Checks
 
 ```bash
-# Run Vitest component test suite
+# Run Vitest test suite (including component and DataTable tests)
 pnpm test
 
 # Type-check shared UI package
