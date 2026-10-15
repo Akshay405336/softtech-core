@@ -733,10 +733,100 @@ export function CourseGallery() {
 
 ---
 
-## 11. Running Tests and Checks
+## 11. Application Layouts & Shells
+
+`@softtech/ui` provides a composable suite of application layout primitives supporting customer-facing websites and complex SaaS admin dashboards:
+
+| Component               | Responsibility                | Props / Features                                                                                   |
+| :---------------------- | :---------------------------- | :------------------------------------------------------------------------------------------------- |
+| `CustomerLayout`        | Customer website shell        | Composes `header`, `children`, `footer` into a `min-h-screen flex flex-col` container              |
+| `CustomerHeader`        | Customer navigation bar       | `brand`, `navItems`, `search`, `actions`, `mobileActions`, responsive drawer toggle                |
+| `CustomerFooter`        | Multi-column marketing footer | `brand`, `description`, `linkGroups`, `contactInfo`, `copyright`, `socialLinks`                    |
+| `AdminLayout`           | Collapsible SaaS app shell    | Coordinates sidebar expanded/collapsed state, mobile drawer, header, scrollable content            |
+| `AdminSidebar`          | Administrative sidebar        | `groups`, `collapsed` (64px icon-only with tooltips), `mobileOpen`, nested items, active indicator |
+| `AdminHeader`           | Dashboard header              | Desktop collapse toggle, mobile hamburger toggle, search slot (`⌘K`), notifications, user menu     |
+| `AdminFooter`           | Compact SaaS footer           | `systemStatus`, `version`, `copyright`, `links`                                                    |
+| `Breadcrumbs`           | Accessible page hierarchy     | Semantic `<nav aria-label="Breadcrumb">`, `<ol>`, `<li>`, icons, `aria-current="page"`             |
+| `PageHeader`            | Standardized page title row   | `title`, `description`, `badge`, `breadcrumbs`, `actions`                                          |
+| `PageContainer`         | Responsive max-width wrapper  | `maxWidth` (`sm`, `md`, `lg`, `xl`, `2xl`, `7xl`, `full`), `padded`                                |
+| `createMockAuthAdapter` | In-memory/cookie test adapter | Implements `AuthAdapter` (`getSession`, `login`, `logout`) with demo credentials                   |
+
+### Example: Composing an Admin Dashboard Shell
+
+```tsx
+"use client";
+
+import {
+  AdminLayout,
+  AdminSidebar,
+  AdminHeader,
+  AdminFooter,
+  PageContainer,
+  PageHeader,
+  Breadcrumbs,
+} from "@softtech/ui";
+import { LayoutDashboard, Users, Home } from "lucide-react";
+
+export function DashboardExample() {
+  const navGroups = [
+    {
+      title: "Overview",
+      items: [
+        { title: "Dashboard", href: "/admin", icon: LayoutDashboard, active: true },
+        { title: "Students", href: "/admin/students", icon: Users },
+      ],
+    },
+  ];
+
+  return (
+    <AdminLayout
+      sidebar={({ collapsed, onCollapsedChange, mobileOpen, onMobileOpenChange }) => (
+        <AdminSidebar
+          groups={navGroups}
+          brand={<span>Softtech Core Admin</span>}
+          collapsed={collapsed}
+          onCollapsedChange={onCollapsedChange}
+          mobileOpen={mobileOpen}
+          onMobileOpenChange={onMobileOpenChange}
+        />
+      )}
+      header={({ toggleCollapsed, toggleMobileOpen }) => (
+        <AdminHeader
+          brand={<span>Admin Console</span>}
+          onToggleDesktopSidebar={toggleCollapsed}
+          onToggleMobileSidebar={toggleMobileOpen}
+          user={{ name: "Sarah Connor", email: "admin@softtech.io", role: "Administrator" }}
+        />
+      )}
+      footer={<AdminFooter version="v0.1.0" />}
+    >
+      <PageContainer maxWidth="7xl">
+        <PageHeader
+          breadcrumbs={
+            <Breadcrumbs
+              items={[
+                { label: "Home", href: "/", icon: Home },
+                { label: "Admin", href: "/admin" },
+                { label: "Dashboard", current: true },
+              ]}
+            />
+          }
+          title="Dashboard Overview"
+          description="Monitor platform operations and metrics."
+        />
+        {/* Page Content */}
+      </PageContainer>
+    </AdminLayout>
+  );
+}
+```
+
+---
+
+## 12. Running Tests and Checks
 
 ```bash
-# Run Vitest test suite (including component, DataTable, form, notification, and file upload tests)
+# Run Vitest test suite across all subsystems
 pnpm test
 
 # Type-check shared UI package

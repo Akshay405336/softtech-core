@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Softtech Core - Design System Showcase",
+  title: "Softtech Core - Enterprise Architecture & Design System",
   description:
-    "Production-quality reusable React component library and design system for Softtech Core",
+    "Production-quality reusable React component library, customer website, and SaaS administration foundation for Softtech Core",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">): React.JSX.Element {
+export default function RootLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
     <html
       lang="en"

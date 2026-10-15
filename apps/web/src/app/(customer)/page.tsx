@@ -48,7 +48,6 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
-  ThemeToggle,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -94,12 +93,15 @@ import {
   Eye,
   GraduationCap,
   Info,
+  Layers,
   Mail,
   MoreHorizontal,
   Plus,
   RefreshCw,
   Send,
+  ShieldCheck,
   Trash2,
+  Globe,
 } from "lucide-react";
 
 interface StudentRecord {
@@ -584,27 +586,116 @@ export default function DesignSystemShowcase(): React.JSX.Element {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold tracking-tight">Softtech Core</h1>
-                <Badge variant="outline">v0.1.0 Design System</Badge>
+      <div className="w-full">
+        {/* Customer Experience Hero Section */}
+        <section
+          id="hero"
+          className="border-b border-border bg-gradient-to-b from-muted/50 via-background to-background py-14 sm:py-20 px-4 sm:px-6 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl space-y-8">
+            <div className="space-y-4 max-w-3xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="font-mono text-xs">
+                  Softtech Core v0.1.0
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  Next.js 16 • React 19 • Tailwind CSS 4
+                </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Component library, token architecture, and accessibility demonstration
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground">
+                Enterprise Layout Foundation & Reusable Component System
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Softtech Core powers two independent, production-grade application experiences: a
+                public customer website and a SaaS administration dashboard with route protection
+                and collapsible navigation.
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground hidden sm:inline">Theme</span>
-              <ThemeToggle />
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild size="default" className="shadow-xs">
+                <a href="/admin">
+                  Open Admin Dashboard
+                  <ChevronRight className="size-4 ml-1.5" aria-hidden="true" />
+                </a>
+              </Button>
+              <Button asChild variant="outline" size="default">
+                <a href="/admin/login">Admin Sign In</a>
+              </Button>
+              <Button asChild variant="ghost" size="default">
+                <a href="#showcase">Explore Component Showcase ↓</a>
+              </Button>
+            </div>
+
+            {/* Architecture Highlights Grid */}
+            <div id="features" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+              <Card className="bg-card/70 border-border">
+                <CardHeader className="pb-3">
+                  <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold mb-2">
+                    <Globe className="size-5" aria-hidden="true" />
+                  </div>
+                  <CardTitle className="text-base">Customer Website Layout</CardTitle>
+                  <CardDescription className="text-xs">
+                    Public header, responsive mobile drawer, multi-column footer, and SEO-friendly
+                    landmarks.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="pt-0">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    Route Group: (customer)
+                  </span>
+                </CardFooter>
+              </Card>
+
+              <Card className="bg-card/70 border-border">
+                <CardHeader className="pb-3">
+                  <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold mb-2">
+                    <Layers className="size-5" aria-hidden="true" />
+                  </div>
+                  <CardTitle className="text-base">Admin Dashboard Layout</CardTitle>
+                  <CardDescription className="text-xs">
+                    Collapsible desktop sidebar, mobile drawer, breadcrumbs, user profile dropdown,
+                    and SaaS metrics.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="pt-0">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    Route Group: (admin)
+                  </span>
+                </CardFooter>
+              </Card>
+
+              <Card className="bg-card/70 border-border">
+                <CardHeader className="pb-3">
+                  <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold mb-2">
+                    <ShieldCheck className="size-5" aria-hidden="true" />
+                  </div>
+                  <CardTitle className="text-base">Standalone Admin Auth</CardTitle>
+                  <CardDescription className="text-xs">
+                    Isolated login screen without customer or admin chrome, connected to the
+                    authentication adapter.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="pt-0">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    Route Group: (admin-auth)
+                  </span>
+                </CardFooter>
+              </Card>
             </div>
           </div>
-        </header>
+        </section>
 
-        <main className="mx-auto max-w-7xl px-6 py-10 space-y-12">
+        {/* 10 Sections Design System Showcase */}
+        <div id="showcase" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+          <div className="border-b border-border pb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              Softtech Core Design System Showcase
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Interactive demonstration of all 10 verified component subsystems in @softtech/ui.
+            </p>
+          </div>
           {/* Section 1: Design Tokens */}
           <section className="space-y-4">
             <div>
@@ -1896,7 +1987,7 @@ export default function DesignSystemShowcase(): React.JSX.Element {
               </CardFooter>
             </Card>
           </section>
-        </main>
+        </div>
       </div>
     </TooltipProvider>
   );
